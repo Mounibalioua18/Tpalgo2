@@ -1,0 +1,7 @@
+# depslib dependency file v1.0
+1762909082 source:c:\users\mounib\desktop\tp se 2024\tp2algo\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<stdbool.h>
+

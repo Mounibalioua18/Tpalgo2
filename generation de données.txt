@@ -1,0 +1,146 @@
+A. Search for an Element
+We study the complexity of searching for an element x in a set A.
+
+1. Unsorted Integer Array (n >= 2) – Non-Sorted Values
+a. Function
+
+bool rechElets_TabNonTries(int n, int x) {
+    for (int i = 0; i < n; i++) if (tab[i] == x) return true;
+    return false;
+}
+
+b. Theoretical Complexity
+
+Best Case: 1 comparison → O(1)
+Worst Case: n comparisons → O(n)
+
+
+2.1. Sorted Integer Array
+a. Function
+
+bool rechElets_TabTries(int n, int x) {
+    for (int i = 0; i < n; i++) {
+        if (tab[i] == x) return true;
+        if (tab[i] > x) return false;
+    }
+    return false;
+}
+
+b. Theoretical Complexity
+
+Best Case: 1 comparison → O(1)
+Worst Case: n comparisons → O(n)
+
+
+2.2. Binary Search (Dichotomy)
+a. Function
+
+bool rechElets_Dicho(int n, int x) {
+    int low = 0, high = n - 1;
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        if (tab[mid] == x) return true;
+        if (tab[mid] < x) low = mid + 1;
+        else high = mid - 1;
+    }
+    return false;
+}
+
+b. Theoretical Complexity
+
+Best Case: 1 comparison → O(1)
+Worst Case: ⌊log₂(n)⌋ + 1 comparisons → O(log n)
+
+
+3. Execution Times Table
+Input sizes n are read from tp2algo.txt (dynamic).
+Times measured using <time.h> and clock().
+
+              n        100000   200000   400000   600000   800000  1000000  1200000  1400000  1600000  1800000
+EletsNonTries  Best Case       0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000
+               Worst Case      0.127    0.243    0.501    0.718    0.984    1.229    1.496    1.737    2.074    2.360
+EletsTries     Best Case       0.000    0.000    0.000    0.000    0.001    0.000    0.000    0.000    0.000    0.000
+               Worst Case      0.188    0.382    0.759    1.141    1.541    1.868    2.343    2.811    3.250    3.597
+EletsTrisDicho Best Case       0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000
+               Worst Case      0.000    0.000    0.000    0.000    0.000    0.000    0.001    0.001    0.001    0.001
+
+
+Note: Binary search measured with 1,000,000 repetitions to make O(log n) visible.
+
+4. Graphs
+Represent the variation of execution time T(n) of the 3 functions when the array is sorted, in the worst case.
+
+Only EletsTries (sequential) and EletsTrisDicho (binary) are compared.
+
+
+5. What do we observe?
+
+Sequential search (EletsTries): linear growth → O(n)
+Time increases from 0.188 ms (n=100k) to 3.597 ms (n=1.8M).
+Binary search (EletsTrisDicho): nearly constant → O(log n)
+Time remains ≤ 0.001 ms even at n = 1,800,000.
+Performance gain:
+Binary search is ~3600 times faster than sequential in worst case.
+
+Conclusion: Binary search is infinitely more efficient for large datasets.
+
+B. Search for Maximum and Minimum
+All elements are distinct.
+
+1. Naive Approach
+a. Function
+
+void MaxEtMinA(int n, int *max, int *min, int *comp_count)
+
+b. Theoretical Complexity (Worst Case)
+2(n-1) comparisons → O(n)
+
+2. Optimized Approach (Pairwise)
+a. Function
+
+void MaxEtMinB(int n, int *max, int *min, int *comp_count)
+
+Compares elements in pairs.
+For each pair: 1 comparison to order, then 2 to update global max/min.
+
+b. Theoretical Complexity (Worst Case)
+
+n even: 3n/2 - 2
+n odd: 3n/2 - 1
+~1.5n comparisons → 25% fewer than naive
+
+3. Comparison of MaxEtMinA and MaxEtMinB
+A counter was added to count comparisons.
+Results (first 5 sizes from tp2algo.txt):
+
+n         Naive Comps  Opti Comps  Naive Time  Opti Time
+100000    199998       149998      1.000       0.000
+200000    399998       299998      1.000       1.000
+400000    799998       599998      1.000       1.000
+600000    1199998      899998      2.000       2.000
+800000    1599998      1199998     2.000       3.000
+
+Naive: 2(n-1) → confirmed
+Optimized: ~1.5n → 25% fewer comparisons
+
+
+4. Experimental Execution Times
+
+Both functions run on random arrays.
+Optimized version uses ~25% fewer comparisons.
+Execution time too fast to measure precisely with clock() on small n.
+
+Data Generation
+
+Input file: tp2algo.txt (dynamic reading, any number of sizes)
+Random data: srand(time(NULL)); tab[i] = rand();
+Sorting: qsort() from <stdlib.h>
+Repetitions:
+Linear search: 1000 reps
+Binary search: 1,000,000 reps (to measure O(log n))
+
+Output files:
+resultats.txt → main table (TP format)
+maxmin.txt → Max/Min comparison
+
+
