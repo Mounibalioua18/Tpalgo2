@@ -7,7 +7,7 @@
 #define MAX_SIZES 1000
 int tab[MAX_N];
 
-// === RECHERCHE ===
+
 bool rechElets_TabNonTries(int n, int x) {
     for (int i = 0; i < n; i++) if (tab[i] == x) return true;
     return false;
@@ -32,7 +32,7 @@ bool rechElets_Dicho(int n, int x) {
     return false;
 }
 
-// === MESURE TEMPS ===
+
 double measure_time_linear(bool (*func)(int, int), int n, int x) {
     const int REPS = 1000;
     clock_t start = clock();
@@ -55,7 +55,7 @@ double measure_time_dicho(bool (*func)(int, int), int n, int x) {
     return ((double)(end - start)) / CLOCKS_PER_SEC * 1000 / REPS;
 }
 
-// === TRI ===
+
 int cmp(const void *a, const void *b) {
     int x = *(const int*)a;
     int y = *(const int*)b;
@@ -64,7 +64,7 @@ int cmp(const void *a, const void *b) {
 void fill_random(int n) { for (int i = 0; i < n; i++) tab[i] = rand(); }
 void fill_sorted(int n) { fill_random(n); qsort(tab, n, sizeof(int), cmp); }
 
-// === MAX & MIN NAIF ===
+
 void MaxEtMinA(int n, int *max, int *min, int *comp_count) {
     *max = tab[0]; *min = tab[0]; *comp_count = 0;
     for (int i = 1; i < n; i++) {
@@ -75,7 +75,7 @@ void MaxEtMinA(int n, int *max, int *min, int *comp_count) {
     }
 }
 
-// === MAX & MIN OPTI (CORRIGÉ : DYNAMIQUE, PAS DE STACK OVERFLOW) ===
+
 void MaxEtMinB(int n, int *max, int *min, int *comp_count) {
     *comp_count = 0;
 
@@ -123,11 +123,11 @@ void MaxEtMinB(int n, int *max, int *min, int *comp_count) {
     free(petits);
 }
 
-// === MAIN ===
+
 int main() {
     srand(time(NULL));
 
-    // Lire tp2algo.txt
+    
     FILE *input = fopen("tp2algo.txt", "r");
     if (!input) {
         printf("Erreur : impossible d'ouvrir tp2algo.txt\n");
@@ -147,7 +147,7 @@ int main() {
         return 1;
     }
 
-    // === resultats.txt (CORRIGÉ : ALIGNEMENT PARFAIT) ===
+   
     FILE *f = fopen("resultats.txt", "w");
     fprintf(f, "              n    ");
     for (int i = 0; i < num_sizes; i++) {
@@ -189,7 +189,7 @@ int main() {
     }
     fclose(f);
 
-    // === maxmin.txt (CORRIGÉ : ESPACES) ===
+   
     FILE *m = fopen("maxmin.txt", "w");
     fprintf(m, "n         Naif Comps  Opti Comps  Naif Time  Opti Time\n");
 
@@ -220,3 +220,4 @@ int main() {
 
     return 0;
 }
+
