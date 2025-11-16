@@ -7,6 +7,7 @@
 #define MAX_SIZES 1000
 int tab[MAX_N];
 
+// === RECHERCHE ===
 bool rechElets_TabNonTries(int n, int x) {
     for (int i = 0; i < n; i++) if (tab[i] == x) return true;
     return false;
@@ -31,7 +32,7 @@ bool rechElets_Dicho(int n, int x) {
     return false;
 }
 
-
+// === MESURE TEMPS ===
 double measure_time_linear(bool (*func)(int, int), int n, int x) {
     const int REPS = 1000;
     clock_t start = clock();
@@ -54,12 +55,16 @@ double measure_time_dicho(bool (*func)(int, int), int n, int x) {
     return ((double)(end - start)) / CLOCKS_PER_SEC * 1000 / REPS;
 }
 
-//TRI
-int cmp(const void *a, const void *b) { return (*(int*)a - *(int*)b); }
+// === TRI ===
+int cmp(const void *a, const void *b) {
+    int x = *(const int*)a;
+    int y = *(const int*)b;
+    return (x > y) - (x < y);  // safe
+}
 void fill_random(int n) { for (int i = 0; i < n; i++) tab[i] = rand(); }
 void fill_sorted(int n) { fill_random(n); qsort(tab, n, sizeof(int), cmp); }
 
-
+// === MAX & MIN NAIF ===
 void MaxEtMinA(int n, int *max, int *min, int *comp_count) {
     *max = tab[0]; *min = tab[0]; *comp_count = 0;
     for (int i = 1; i < n; i++) {
@@ -70,35 +75,59 @@ void MaxEtMinA(int n, int *max, int *min, int *comp_count) {
     }
 }
 
+// === MAX & MIN OPTI (CORRIGÉ : DYNAMIQUE, PAS DE STACK OVERFLOW) ===
 void MaxEtMinB(int n, int *max, int *min, int *comp_count) {
     *comp_count = 0;
-    int i = 0, big, small;
-    if (n % 2 == 1) { big = small = tab[0]; i = 1; }
-    else {
-        (*comp_count)++;
-        if (tab[0] > tab[1]) { big = tab[0]; small = tab[1]; }
-        else { big = tab[1]; small = tab[0]; }
-        i = 2;
+
+    // Allocation dynamique
+    int *grands = malloc((n/2 + 1) * sizeof(int));
+    int *petits = malloc((n/2 + 1) * sizeof(int));
+    if (!grands || !petits) {
+        printf("Erreur allocation mémoire\n");
+        exit(1);
     }
-    for (; i < n; i += 2) {
+
+    int nb_grands = 0, nb_petits = 0;
+    int i = 0;
+
+    while (i < n - 1) {
         (*comp_count)++;
-        if (tab[i] > tab[i+1]) {
-            if (tab[i] > big) big = tab[i];
-            if (tab[i+1] < small) small = tab[i+1];
+        if (tab[i] > tab[i + 1]) {
+            grands[nb_grands++] = tab[i];
+            petits[nb_petits++] = tab[i + 1];
         } else {
-            if (tab[i+1] > big) big = tab[i+1];
-            if (tab[i] < small) small = tab[i];
+            grands[nb_grands++] = tab[i + 1];
+            petits[nb_petits++] = tab[i];
         }
-        (*comp_count) += 2;
+        i += 2;
     }
-    *max = big; *min = small;
+    if (i < n) {
+        grands[nb_grands++] = tab[i];
+    }
+
+    // Max parmi grands
+    *max = grands[0];
+    for (int j = 1; j < nb_grands; j++) {
+        (*comp_count)++;
+        if (grands[j] > *max) *max = grands[j];
+    }
+
+    // Min parmi petits
+    *min = petits[0];
+    for (int j = 1; j < nb_petits; j++) {
+        (*comp_count)++;
+        if (petits[j] < *min) *min = petits[j];
+    }
+
+    free(grands);
+    free(petits);
 }
 
-
+// === MAIN ===
 int main() {
     srand(time(NULL));
 
-
+    // Lire tp2algo.txt
     FILE *input = fopen("tp2algo.txt", "r");
     if (!input) {
         printf("Erreur : impossible d'ouvrir tp2algo.txt\n");
@@ -107,7 +136,6 @@ int main() {
 
     int *sizes = malloc(MAX_SIZES * sizeof(int));
     int num_sizes = 0;
-
     while (num_sizes < MAX_SIZES && fscanf(input, "%d", &sizes[num_sizes]) == 1) {
         num_sizes++;
     }
@@ -119,18 +147,13 @@ int main() {
         return 1;
     }
 
-    printf("Lu %d tailles depuis tp2algo.txt\n", num_sizes);
-
-    // === FICHIER 1 : resultats.txt (tableau du TP, dynamique) ===
+    // === resultats.txt (CORRIGÉ : ALIGNEMENT PARFAIT) ===
     FILE *f = fopen("resultats.txt", "w");
-
-    // En-t�te
     fprintf(f, "              n    ");
     for (int i = 0; i < num_sizes; i++) {
         fprintf(f, " %8d", sizes[i]);
     }
     fprintf(f, "\n");
-
 
     const char *labels[] = {
         "EletsNonTries  Meilleur cas", "               Pire cas    ",
@@ -138,21 +161,21 @@ int main() {
         "EletsTrisDicho Meilleur cas", "               Pire cas    "
     };
 
-    double results[6][MAX_SIZES];
+    double results[6][MAX_SIZES] = {0};
 
     for (int s = 0; s < num_sizes; s++) {
         int n = sizes[s];
         printf("Testing n = %7d ... ", n); fflush(stdout);
 
         fill_random(n);
-        results[0][s] = measure_time_linear(rechElets_TabNonTries, n, tab[0]);     // NonTri MC
-        results[1][s] = measure_time_linear(rechElets_TabNonTries, n, -1);         // NonTri PC
+        results[0][s] = measure_time_linear(rechElets_TabNonTries, n, tab[0]);
+        results[1][s] = measure_time_linear(rechElets_TabNonTries, n, -1);
 
         fill_sorted(n);
-        results[2][s] = measure_time_linear(rechElets_TabTries, n, tab[0]);        // Tri MC
-        results[3][s] = measure_time_linear(rechElets_TabTries, n, 2000000000);   // Tri PC
-        results[4][s] = measure_time_dicho(rechElets_Dicho, n, tab[n/2]);         // Dicho MC
-        results[5][s] = measure_time_dicho(rechElets_Dicho, n, -1);               // Dicho PC
+        results[2][s] = measure_time_linear(rechElets_TabTries, n, tab[0]);
+        results[3][s] = measure_time_linear(rechElets_TabTries, n, 2000000000);
+        results[4][s] = measure_time_dicho(rechElets_Dicho, n, tab[n/2]);
+        results[5][s] = measure_time_dicho(rechElets_Dicho, n, -1);
 
         printf("Done\n");
     }
@@ -164,14 +187,13 @@ int main() {
         }
         fprintf(f, "\n");
     }
-
     fclose(f);
 
-
+    // === maxmin.txt (CORRIGÉ : ESPACES) ===
     FILE *m = fopen("maxmin.txt", "w");
     fprintf(m, "n         Naif Comps  Opti Comps  Naif Time  Opti Time\n");
 
-    int maxmin_count = (num_sizes < 5) ? num_sizes : 5;  // max 5
+    int maxmin_count = (num_sizes < 5) ? num_sizes : 5;
     for (int s = 0; s < maxmin_count; s++) {
         int n = sizes[s];
         fill_random(n);
@@ -192,9 +214,9 @@ int main() {
 
     free(sizes);
 
-    printf("\n The files are genrated :\n");
-    printf("resultats.txt \n");
-    printf(" maxmin.txt \n");
+    printf("\nFICHIERS GENERES :\n");
+    printf("  → resultats.txt  \n");
+    printf("  → maxmin.txt     \n");
 
     return 0;
 }
